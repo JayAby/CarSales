@@ -1,0 +1,2 @@
+Joel Olubankole,20,joelabiola04@gmail.com,Car 12,Model 12,45000.00,2023-12-05
+Jogn Kbee,23,jkbee@gmail.com,Car 11,Model 11,18000.00,2023-12-07

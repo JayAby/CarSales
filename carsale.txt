@@ -1,0 +1,726 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <time.h>
+#include <ctype.h>
+
+#define MAX_CARS 15
+#define DISCOUNT_RATE 0.10
+
+struct carInfo {
+    char name[50];
+    char model[50];
+    double price;
+    int year;
+    int remaining;
+};
+
+struct salesRecord {
+    char customerName[100];
+    int customerAge;
+    char customerMail[50];
+    char carName[50];
+    char carModel[50];
+    double totalPrice;
+    char dateofPurchase[20];
+};
+
+void clearScreen() {
+#ifdef _WIN32
+    system("cls");
+
+// Checking for mac OS with
+// __APPLE__ macro
+#elif __APPLE__
+    system("clear");
+
+#endif
+}
+
+
+void clearInputBuffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+
+void getTime(char date_string[20]) {
+    time_t current_time = time(NULL);
+    strftime(date_string, 20, "%Y-%m-%d", localtime(&current_time));
+    printf("Purchased Date: %s\n", date_string);
+}
+
+//File Path declaration for the total sales
+const char *totalSalesFilePath = "total_sales.txt";
+
+
+//This was used to create the car sales text file, and in order to stop it from creating a new text file, I had to comment it out.
+//At the initial phase your code won't run, please head on to the loadData function and comment out the initalizeCarArrays function from there and compile and then comment it out once you're done.
+void initializeCarArrays(struct carInfo cars[]) {
+    const char *carNames[MAX_CARS] = {
+            "Car 1", "Car 2", "Car 3", "Car 4", "Car 5",
+            "Car 6", "Car 7", "Car 8", "Car 9", "Car 10",
+            "Car 11", "Car 12", "Car 13", "Car 14", "Car 15"
+    };
+
+    const char *carModels[MAX_CARS] = {
+            "Model 01", "Model 02", "Model 03", "Model 04", "Model 05",
+            "Model 06", "Model 07", "Model 08", "Model 09", "Model 10",
+            "Model 11", "Model 12", "Model 13", "Model 14", "Model 15"
+    };
+
+    double carPrices[MAX_CARS] = {
+            25000.0, 22000.0, 35000.0, 40000.0, 24000.0,
+            45000.0, 52000.0, 52000.0, 28000.0, 23000.0,
+            20000.0, 45000.0, 27000.0, 27000.0, 40000.0
+    };
+
+    int carYear[MAX_CARS] = {
+            2007, 2009, 2022, 2010, 2012,
+            2020, 2022, 2014, 2018, 2020,
+            2021, 2005, 2004, 2004, 2021
+    };
+
+    int carRemaining[MAX_CARS] = {
+            5, 8, 12, 10, 7,
+            6, 4, 7, 9, 6,
+            5, 8, 3, 6, 2
+    };
+
+    FILE *file = fopen("car_data.txt", "w");
+    if (file == NULL) {
+        perror("Error opening car data file");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < MAX_CARS; i++) {
+        fprintf(file, "%s,%s,%.2f,%d,%d\n",
+                carNames[i], carModels[i], carPrices[i], carYear[i], carRemaining[i]);
+    }
+
+    fclose(file);
+
+    // Sorting cars by year (as in your original code)
+    for (int i = 0; i < MAX_CARS - 1; i++) {
+        for (int j = 0; j < MAX_CARS - 1 - i; j++) {
+            if (cars[j].year < cars[j + 1].year) {
+                struct carInfo temp = cars[j];
+                cars[j] = cars[j + 1];
+                cars[j + 1] = temp;
+            }
+        }
+    }
+}
+
+
+void readCarDataFromFile(struct carInfo cars[]) {
+    FILE *file = fopen("car_data.txt", "r");
+    if (file == NULL) {
+        perror("Error opening car data file");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < MAX_CARS; i++) {
+        fscanf(file, "%49[^,],%49[^,],%lf,%d,%d\n",
+               cars[i].name, cars[i].model, &cars[i].price, &cars[i].year, &cars[i].remaining);
+    }
+
+    fclose(file);
+}
+
+void printCarData(struct carInfo cars[]) {
+    while(1){
+        // Bubble sort cars based on the year in descending order
+        for (int i = 0; i < MAX_CARS - 1; i++) {
+            for (int j = 0; j < MAX_CARS - 1 - i; j++) {
+                if (cars[j].year < cars[j + 1].year) {
+                    struct carInfo temp = cars[j];
+                    cars[j] = cars[j + 1];
+                    cars[j + 1] = temp;
+                }
+            }
+        }
+
+        // Print the sorted car details
+        printf("Car Inventory:\n");
+        printf("S/N\t\tName\t\tModel\t\t\t\tPrice\t\t\tYear\t\t\tRemaining\n");
+        for (int i = 0; i < MAX_CARS; i++) {
+            printf("%d\t\t%s\t\t%s\t\t\t%.2f\t\t%d\t\t\t%d\n", i + 1, cars[i].name, cars[i].model, cars[i].price,
+                   cars[i].year, cars[i].remaining);
+        }
+        int choice;
+        printf("Enter 0 to return to the main-menu: ");
+        scanf("%d", &choice);
+
+        if (choice == 0) {
+            printf("Returning to the main menu...\n");
+            break;
+        } else {
+            printf("Wrong choice, please try again.\n");
+        }
+
+    }
+
+}
+
+void writeCarDataToFile(struct carInfo cars[]) {
+    FILE *file = fopen("car_data.txt", "w");
+    if (file == NULL) {
+        perror("Error opening car data file");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < MAX_CARS; i++) {
+        fprintf(file, "%s,%s,%.2f,%d,%d\n",
+                cars[i].name, cars[i].model, cars[i].price, cars[i].year, cars[i].remaining);
+    }
+
+    fclose(file);
+}
+
+void writeSalesDataToFile(struct salesRecord saleHistory[], int noOfSales) {
+    FILE *file = fopen("sales_data.txt", "w");
+    if (file == NULL) {
+        perror("Error opening sales data file");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < noOfSales; i++) {
+        fprintf(file, "%s,%d,%s,%s,%s,%.2f,%s\n",
+                saleHistory[i].customerName,
+                saleHistory[i].customerAge,
+                saleHistory[i].customerMail,
+                saleHistory[i].carName,
+                saleHistory[i].carModel,
+                saleHistory[i].totalPrice,
+                saleHistory[i].dateofPurchase);
+    }
+
+    fclose(file);
+}
+
+void readSalesDataFromFile(struct salesRecord saleHistory[], int *noOfSales) {
+    FILE *file = fopen("sales_data.txt", "r");
+    if (file == NULL) {
+        perror("Error opening sales data file");
+        return;
+    }
+
+    *noOfSales = 0;
+    while (*noOfSales < MAX_CARS &&
+           fscanf(file, "%99[^,],%d,%49[^,],%49[^,],%49[^,],%lf,%19[^\n]\n",
+                  saleHistory[*noOfSales].customerName,
+                  &saleHistory[*noOfSales].customerAge,
+                  saleHistory[*noOfSales].customerMail,
+                  saleHistory[*noOfSales].carName,
+                  saleHistory[*noOfSales].carModel,
+                  &saleHistory[*noOfSales].totalPrice,
+                  saleHistory[*noOfSales].dateofPurchase) == 7) {
+        (*noOfSales)++;
+    }
+
+    fclose(file);
+}
+
+double giveDiscount(double price, int hasClubCard) {
+    //Code to check if the value entered for the club-card is an integer other than 0
+    if (hasClubCard) {
+        double discountPrice = price - (price * DISCOUNT_RATE);
+        printf("10%% Discount Given\n");
+        printf("Car Price: £%.2f\n", price);
+        printf("Club-Card Discount Price: £%.2f\n", discountPrice);
+        return discountPrice;
+    } else {
+        return price;
+    }
+}
+
+int isValidEmail(char *email) {
+    int i, at_count = 0, dot_count = 0;
+    char *at_pos = NULL, *dot_pos = NULL;
+
+    // Check if email is empty
+    if (strlen(email) == 0) {
+        return 0;
+    }
+
+    // Check if email contains '@' and '.'
+    for (i = 0; i < strlen(email); i++) {
+        if (email[i] == '@') {
+            at_count++;
+            at_pos = &email[i];
+        } else if (email[i] == '.') {
+            dot_count++;
+            dot_pos = &email[i];
+        }
+    }
+
+    if (at_count != 1 || dot_count == 0 || dot_pos < at_pos) {
+        return 0;
+    }
+
+    // Check if username and domain name are valid
+    for (i = 0; i < at_pos - email; i++) {
+        if (!isalnum(email[i]) && email[i] != '.' && email[i] != '_' && email[i] != '-') {
+            return 0;
+        }
+    }
+
+    for (i = at_pos - email + 1; i < dot_pos - email; i++) {
+        if (!isalnum(email[i]) && email[i] != '.' && email[i] != '-' && !isupper(email[i])) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+void customerGiveFeedback(const char *customerName, int *rating, char feedback[1000], size_t size) {
+    while (1) {
+        printf("How was your experience with us:\n");
+        printf("On a scale of 1(Terrible), 2(Poor), 3(Good), 4(Very-good), 5(Excellent):\n");
+
+        scanf("%d", rating);
+
+        if (*rating < 1 || *rating > 5) {
+            printf("Invalid rating, please enter a number between 1 and 5\n");
+            clearInputBuffer();
+            continue;
+        }
+
+        clearInputBuffer();  // Clear the input buffer before getting feedback
+        printf("Enter your feedback (max 1000 characters):\n");
+
+        // Read up to size - 1 characters, leaving room for the null terminator
+        if (fgets(feedback, size, stdin) != NULL) {
+            // Remove the newline character if it exists
+            feedback[strcspn(feedback, "\n")] = '\0';
+
+            if (strlen(feedback) <= size - 1) {
+                // Valid input
+                break;
+            } else {
+                // Input exceeds the limit
+                printf("Feedback exceeds the limit. Please enter again.\n");
+            }
+        } else {
+            // Error reading input
+            printf("Error reading feedback input. Please try again.\n");
+            clearInputBuffer();  // Clear the input buffer in case of an error
+        }
+
+        FILE *file = fopen("feedback.txt", "a");
+        if (file == NULL) {
+            perror("Error opening feedback file");
+            return;
+        }
+
+        fprintf(file, "Customer Name: %s\n", customerName);
+        fprintf(file, "Rating: %d\n", *rating);
+        fprintf(file, "Feedback: %s\n", feedback);
+        fprintf(file, "-----------------------------------\n");
+
+        fclose(file);
+
+        printf("Thank you for your feedback, %s!\n", customerName);
+
+        break;
+    }
+}
+
+void buyCar(struct carInfo cars[], int carIndex, int hasClubCard, struct salesRecord saleHistory[], int *noOfSales) {
+    if (carIndex >= 0 && carIndex < MAX_CARS) {
+        if (cars[carIndex].remaining > 0) {
+            double carPrice = cars[carIndex].price;
+            carPrice = giveDiscount(carPrice, hasClubCard);
+
+            if (carPrice > 0) {
+                char customerName[100];
+                char customerLName[100];
+                char customerEmail[50];
+                int customerAge;
+                char buffer[20];
+
+                while (1) {
+                    printf("Enter your First-Name: ");
+                    clearInputBuffer();
+                    fgets(customerName, sizeof(customerName), stdin);
+
+                    // Remove the newline character if present
+                    size_t len = strlen(customerName);
+                    if (len > 0 && customerName[len - 1] == '\n') {
+                        customerName[len - 1] = '\0';
+                    }
+
+                    int valid = 1;
+                    for (int i = 0; customerName[i] != '\0'; i++) {
+                        if (!isalpha(customerName[i])) {
+                            valid = 0;
+                            break;
+                        }
+                    }
+
+                    if (valid) {
+                        break;
+                    } else {
+                        printf("Invalid format\n");
+                    }
+                }
+
+                while (1) {
+                    printf("Enter your Last-Name: ");
+                    fgets(customerLName, sizeof(customerLName), stdin);
+                    customerLName[strcspn(customerLName, "\n")] = '\0';
+
+                    int valid = 1;
+                    for (int i = 0; customerLName[i] != '\0'; i++) {
+                        if (!isalpha(customerLName[i])) {
+                            valid = 0;
+                            break;
+                        }
+                    }
+
+                    if (valid) {
+                        break;
+                    } else {
+                        printf("Invalid format\n");
+                    }
+                }
+                while (1) {
+                    printf("Enter your Age: ");
+
+                    // Read user input into the 'buffer' array
+                    if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+                        printf("Error reading input");
+                        // return 1;
+                    }
+
+                    // Attempt to parse the input from 'buffer' as an integer into 'customerAge'
+                    if (sscanf(buffer, "%d", &customerAge) == 1) {
+                        // If successful, break out of the loop
+                        break;
+                    } else {
+                        // If parsing fails, inform the user and prompt again
+                        printf("Please enter a valid Age.\n");
+                    }
+                }
+
+
+
+                while(1){
+                    printf("Enter your Email-Address: ");
+                    fgets(customerEmail, sizeof(customerEmail), stdin);
+                    if(strlen(customerEmail) > 0 && customerEmail[strlen(customerEmail) - 1] == '\n'){
+                        customerEmail[strlen(customerEmail)-1] ='\0';
+                    }
+
+                    if(isValidEmail(customerEmail)){
+                        break;
+                    }else{
+                        printf("Inalid Email format\n");
+                    }
+                }
+
+                char customerFullName[200];
+                snprintf(customerFullName, sizeof(customerFullName), "%s %s", customerName, customerLName);
+
+                char date[20];
+                getTime(date);
+
+                strcpy(saleHistory[*noOfSales].customerName, customerFullName);
+                strcpy(saleHistory[*noOfSales].customerMail, customerEmail);
+                saleHistory[*noOfSales].customerAge = customerAge;
+                strcpy(saleHistory[*noOfSales].carName, cars[carIndex].name);
+                strcpy(saleHistory[*noOfSales].carModel, cars[carIndex].model);
+                saleHistory[*noOfSales].totalPrice = carPrice;
+                strcpy(saleHistory[*noOfSales].dateofPurchase, date);
+                (*noOfSales)++;
+
+                --cars[carIndex].remaining;
+
+                // Write updated car details to the file
+                writeCarDataToFile(cars);
+
+                printf("You have purchased a %s %s. Enjoy your new car!\n", cars[carIndex].name, cars[carIndex].model);
+                printf("Total price: £%.2f\n", carPrice);
+            } else {
+                printf("Sorry, this car model is out of stock.\n");
+            }
+        } else {
+            printf("Invalid car selection. Please choose a valid car index.\n");
+        }
+
+        int feedbackChoice;
+        printf("Would you like to give feedback? (1. Yes, 0. No): ");
+        scanf("%d",&feedbackChoice);
+
+        if (feedbackChoice == 1) {
+            int rating;
+            char feedback[1000];
+
+            // Call customerGiveFeedback with the customer's name
+            customerGiveFeedback(saleHistory[*noOfSales - 1].customerName, &rating, feedback, sizeof(feedback));
+            // Get the customer name and save it to a new file along with the feedback
+            FILE *feedbackFile = fopen("customerFeedback.txt", "a");
+            if (feedbackFile == NULL) {
+                perror("Error opening feedback file");
+                return;
+            }
+
+            fprintf(feedbackFile, "Customer Name: %s\n", saleHistory[*noOfSales - 1].customerName);
+            fprintf(feedbackFile, "Rating: %d\n", rating);
+            fprintf(feedbackFile, "Feedback: %s\n", feedback);
+            fprintf(feedbackFile, "-----------------------------------\n");
+
+            fclose(feedbackFile);
+        }
+    }
+}
+
+
+void viewSalesData(struct salesRecord saleHistory[], int noOfSales, struct carInfo cars[], double totalSales[]) {
+    int menuChoice;
+    printf("1. View Customer Sales Data\n");
+    printf("2. View Total Car Sales Data\n");
+    printf("Make your choice: ");
+    scanf("%d",&menuChoice);
+
+    if(menuChoice == 1) {
+        while (1) {
+            printf("Sales Data: \n");
+            for (int i = 0; i < noOfSales; i++) {
+                printf("Sale %d: \n", i + 1);
+                printf("Customer Name: %s\n", saleHistory[i].customerName);
+                printf("Customer Email: %s\n", saleHistory[i].customerMail);
+                printf("Customer Age: %d\n", saleHistory[i].customerAge);
+                printf("Car Name: %s\n", saleHistory[i].carName);
+                printf("Car Model: %s\n", saleHistory[i].carModel);
+                printf("Total Price: %.2f\n\n", saleHistory[i].totalPrice);
+                printf("Purchased Date: %s\n", saleHistory[i].dateofPurchase);
+            }
+
+            int choice;
+            printf("Enter 0 to return to the main-menu: ");
+            scanf("%d", &choice);
+
+            if (choice == 0) {
+                printf("Returning to the main menu...\n");
+                break;
+            } else {
+                printf("Wrong choice, please try again.\n");
+            }
+        }
+    } else if(menuChoice == 2){
+//        while(1){
+            int totalCarsSold = 0; //Counter for total cars sold
+            int carSoldCount[MAX_CARS] ={0}; //Initialize car sale counter to zero for each car
+
+            //Initialize total-sales to zero for each car
+            for(int i = 0; i < MAX_CARS; i++){
+                totalSales[i] = 0.0;
+            }
+
+            for(int i = 0; i < noOfSales; i++) {
+                int carIndex = -1;
+
+                //Find the corresponding car model index for the sale
+                for (int j = 0; j < MAX_CARS; j++) {
+                    if (strcmp(saleHistory[i].carName, cars[j].name) == 0 &&
+                        strcmp(saleHistory[i].carModel, cars[j].model) == 0) {
+                        carIndex = j;
+                        break;
+                    }
+                }
+
+                if (carIndex != -1) {
+                    totalSales[carIndex] += saleHistory[i].totalPrice;
+                    carSoldCount[carIndex]++; //Increment car sale count for each model
+                    totalCarsSold++; //Increment the total cars sold counter
+                }
+            }
+            //Print the total Sales for each car Model
+            printf("Total Sales for Each Car Model: \n");
+            printf("Car Name \t\t Car Model \t\t Total Sales \t\t Cars Sold\n");
+            for(int i = 0; i < MAX_CARS; i++){
+                printf("%s \t\t\t %s  \t\t\t £%.2f \t\t\t\t %d\n", cars[i].name, cars[i].model, totalSales[i], carSoldCount[i]);
+            }
+
+            //Display the total number of cars sold
+            printf("\n Total Number of Cars Sold: %d\n", totalCarsSold);
+
+            //Save the totalSales to a file
+            FILE *totalSalesFile = fopen(totalSalesFilePath, "w");
+            if(totalSalesFile == NULL){
+                perror("Error opening total sales file");
+                return;
+            }
+
+            for(int i = 0; i < MAX_CARS; i++){
+                fprintf(totalSalesFile, "%s %s: £%.2f \t\t\t Cars Sold: %d\n", cars[i].name,cars[i].model, totalSales[i], carSoldCount[i]);
+            }
+
+            fprintf(totalSalesFile, "\nTotal Number of Cars Sold: %d\n", totalCarsSold);
+
+
+            fclose(totalSalesFile);
+
+            int choice;
+            printf("Enter 0 to return to Main Menu\n");
+            scanf("%d",&choice);
+            if (choice == 0) {
+                printf("Returning to the main menu...\n");
+//                break;
+            } else {
+                printf("Wrong choice, please try again.\n");
+            }
+//        }
+    } else{
+        printf("Invalid Choice, please try again.\n");
+    }
+}
+
+void viewCarData(struct carInfo cars[]) {
+        // Bubble sort cars based on the year in descending order
+        for (int i = 0; i < MAX_CARS - 1; i++) {
+            for (int j = 0; j < MAX_CARS - 1 - i; j++) {
+                if (cars[j].year < cars[j + 1].year) {
+                    struct carInfo temp = cars[j];
+                    cars[j] = cars[j + 1];
+                    cars[j + 1] = temp;
+                }
+            }
+        }
+
+        // Print the sorted car details
+        printf("Car Inventory:\n");
+        printf("S/N\t\tName\t\tModel\t\t\t\tPrice\t\t\tYear\t\t\tRemaining\n");
+        for (int i = 0; i < MAX_CARS; i++) {
+            printf("%d\t\t%s\t\t%s\t\t\t%.2f\t\t%d\t\t\t%d\n", i + 1, cars[i].name, cars[i].model, cars[i].price,
+                   cars[i].year, cars[i].remaining);
+        }
+}
+
+void purchaseCars(struct carInfo cars[], struct salesRecord saleHistory[], int *noOfSales) {
+    int choice, carSelection;
+    int hasClubCard = 0;
+
+    while (1) {
+        printf("1. Purchase a car\n");
+        printf("0. Return to Main Menu\n");
+        printf("Make your selection: ");
+        scanf("%d", &choice);
+        clearInputBuffer();
+
+        if (choice == 0) {
+            return;
+        } else if (choice == 1) {
+            printf("Do you have a club card? (1. Yes, 0. No): \n");
+            scanf("%d", &hasClubCard);
+
+            if (hasClubCard == 1 || hasClubCard == 0) {
+                clearScreen();
+                viewCarData(cars);
+                printf("Choose a car to purchase 1 - %d: ", MAX_CARS);
+                scanf("%d", &carSelection);
+                if (carSelection > 0 && carSelection <= MAX_CARS) {
+                    buyCar(cars, carSelection - 1, hasClubCard, saleHistory, noOfSales);
+                    printf("\n");
+                }
+            }
+        } else {
+            printf("Invalid Selection. Please Try Again!\n");
+        }
+    }
+}
+
+void loadData(struct carInfo cars[], struct salesRecord saleHistory[], int *noOfSales) {
+//     initializeCarArrays(cars);// Commented out because the purpose of the function has been carried out already
+    readCarDataFromFile(cars);
+    readSalesDataFromFile(saleHistory, noOfSales);
+}
+
+void viewCustomerFeedback() {
+    while (1) {
+        FILE *file = fopen("customerFeedback.txt", "r");
+        if (file == NULL) {
+            perror("Error opening feedback file");
+            return;
+        }
+
+        printf("Customer Feedbacks:\n");
+        printf("----------------------------\n");
+
+        char line[1000];
+        while (fgets(line, sizeof(line), file) != NULL) {
+            printf("%s", line);
+        }
+
+        fclose(file);
+
+        int choice;
+        printf("Enter 0 to return to the main-menu: ");
+        scanf("%d", &choice);
+
+        if (choice == 0) {
+            printf("Returning to the main menu...\n");
+            break;
+        } else {
+            printf("Wrong choice, please try again.\n");
+        }
+    }
+}
+
+void introduction() {
+    struct carInfo cars[MAX_CARS];
+    struct salesRecord saleHistory[MAX_CARS];
+    int noOfSales = 0;
+    int choice;
+    double totalSales[MAX_CARS] = {0.0};
+
+    loadData(cars, saleHistory, &noOfSales);
+
+    while (1) {
+        sleep(1);
+        clearScreen();
+        printf(" Welcome to the Car Sales Program!\n");
+        printf("1. View Car Inventory\n");
+        printf("2. Purchase a Car\n");
+        printf("3. View Sales Data\n");
+        printf("4. View Customer Feedbacks\n");
+        printf("5. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                clearScreen();
+                printCarData(cars);
+                break;
+            case 2:
+                clearScreen();
+                purchaseCars(cars, saleHistory, &noOfSales);
+                break;
+            case 3:
+                clearScreen();
+                viewSalesData(saleHistory, noOfSales, cars, totalSales);
+                break;
+            case 4:
+                clearScreen();
+                viewCustomerFeedback();
+                break;
+            case 5:
+                clearScreen();
+                printf("Thank you for visiting the Car Dealership!\n");
+                writeSalesDataToFile(saleHistory, noOfSales);
+                return;
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    }
+}
+
+int main() {
+    introduction();
+    return 0;
+}

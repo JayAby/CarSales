@@ -1,0 +1,8 @@
+Customer Name: Joel Olubankole
+Rating: 4
+Feedback: It was good
+-----------------------------------
+Customer Name: qaeda salawu
+Rating: 2
+Feedback: tyu
+-----------------------------------

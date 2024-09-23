@@ -1,0 +1,17 @@
+Car 3 Model 03: £0.00 			 Cars Sold: 0
+Car 7 Model 07: £0.00 			 Cars Sold: 0
+Car 11 Model 11: £18000.00 			 Cars Sold: 1
+Car 15 Model 15: £0.00 			 Cars Sold: 0
+Car 6 Model 06: £0.00 			 Cars Sold: 0
+Car 10 Model 10: £0.00 			 Cars Sold: 0
+Car 9 Model 09: £0.00 			 Cars Sold: 0
+Car 8 Model 08: £0.00 			 Cars Sold: 0
+Car 5 Model 05: £0.00 			 Cars Sold: 0
+Car 4 Model 04: £0.00 			 Cars Sold: 0
+Car 2 Model 02: £0.00 			 Cars Sold: 0
+Car 1 Model 01: £0.00 			 Cars Sold: 0
+Car 12 Model 12: £45000.00 			 Cars Sold: 1
+Car 13 Model 13: £0.00 			 Cars Sold: 0
+Car 14 Model 14: £0.00 			 Cars Sold: 0
+
+Total Number of Cars Sold: 2
